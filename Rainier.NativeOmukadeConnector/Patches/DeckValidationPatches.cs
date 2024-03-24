@@ -33,12 +33,6 @@ namespace Rainier.NativeOmukadeConnector.Patches
     {
         static bool Prefix(ref DeckValidPackage __result, RulesFormat format, DeckInfo deck, IQueryableCardDatabase cardDatabase, IConfigLoader configLoader)
         {
-            if (Plugin.Settings.ForceAllLegalityChecksToSucceed)
-            {
-                __result = new DeckValidPackage { entries = new DeckErrorEntry[0] };
-                return false;
-            }
-
             __result = DeckValidationService.ValidateDeckIgnoreUnowned(format, deck, cardDatabase, configLoader);
             return false;
         }
@@ -50,15 +44,12 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrepare]
         static bool Prepare() => Plugin.Settings.ForceAllLegalityChecksToSucceed;
 
-        static bool Prefix(ref DeckValidPackage __result)
+        static void Postfix(ref DeckValidPackage __result)
         {
             if (Plugin.Settings.ForceAllLegalityChecksToSucceed)
             {
-                __result = new DeckValidPackage { entries = new DeckErrorEntry[0] };
-                return false;
+                __result.entries = __result.entries.Where((state) => state.error != DeckValidState.Banned || ClientPatches.ImplementedExpandedCardsFromServer.Contains(state.cardID)).ToArray();
             }
-
-            return true;
         }
     }
 
