@@ -64,9 +64,15 @@ namespace Rainier.NativeOmukadeConnector
             // Plugin startup logic
             SharedLogger.LogInfo($"Performing patches for NOC...");
 
-            new HarmonyLib.Harmony(nameof(Rainier.NativeOmukadeConnector)).PatchAll();
-
-            SharedLogger.LogInfo($"Applied Patches");
+            try
+            {
+                new HarmonyLib.Harmony(nameof(Rainier.NativeOmukadeConnector)).PatchAll();
+                SharedLogger.LogInfo($"Applied Patches");
+            }
+            catch (Exception ex)
+            {
+                SharedLogger.LogError(ex);
+            }
         }
     }
 }
