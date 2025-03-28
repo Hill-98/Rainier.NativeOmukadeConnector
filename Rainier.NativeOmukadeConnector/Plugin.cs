@@ -28,9 +28,8 @@ namespace Rainier.NativeOmukadeConnector
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.1.4 (\"Auditioning Apple Rev4\")";
+        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.1.4 (\"Auditioning Apple Rev4 Hill-98 mod\")";
         internal const string OMUKADE_VERSION = "Omukade Cheyenne-EX";
-        internal const string CONFIG_FILENAME = "config-noc.json";
 
         internal static ManualLogSource SharedLogger;
         internal static ConfigurationSettings Settings;
@@ -47,10 +46,12 @@ namespace Rainier.NativeOmukadeConnector
             SharedLogger.LogWarning($"CMD Line Args is: {string.Join(" ", Environment.GetCommandLineArgs())}");
             SharedLogger.LogWarning($"CMD Line is: {Environment.CommandLine}");
 
-            if (File.Exists(CONFIG_FILENAME))
+            string config = Environment.GetEnvironmentVariable("OMUKADE_CONNECTOR_CONFIG") ?? "config-noc.json";
+
+            if (File.Exists(config))
             {
                 SharedLogger.LogMessage("Found config file");
-                Settings = JsonConvert.DeserializeObject<ConfigurationSettings>(File.ReadAllText(CONFIG_FILENAME));
+                Settings = JsonConvert.DeserializeObject<ConfigurationSettings>(File.ReadAllText(config));
             }
             else
             {
