@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using ClientNetworking;
+using HarmonyLib;
+using RainierClientSDK;
 using RainierClientSDK.source.Friend.Implementations;
 using System;
 using System.Collections.Generic;
@@ -66,6 +68,51 @@ namespace Rainier.NativeOmukadeConnector.Patches
 
             TextMeshProUGUI textThingee = (TextMeshProUGUI) AccessTools.Field(typeof(StartupScreenText), "loadingText").GetValue(sst);
             textThingee.text = textToDisplay;
+        }
+    }
+
+    // Token: 0x0200001C RID: 28
+    [HarmonyPatch(typeof(PlatformRainierClient))]
+    internal static class PlatformRainierClient_DisableMultipleReconnections
+    {
+        // Token: 0x0600003D RID: 61 RVA: 0x00002D2D File Offset: 0x00000F2D
+        [HarmonyPatch("Setup")]
+        [HarmonyPrefix]
+        private static bool Setup_Prefix()
+        {
+            return !PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected;
+        }
+
+        // Token: 0x0600003E RID: 62 RVA: 0x00002D37 File Offset: 0x00000F37
+        [HarmonyPatch("OnNetworkChange")]
+        [HarmonyPrefix]
+        private static bool OnNetworkChange_Prefix(PlatformRainierClient __instance, ref NetworkStatus status)
+        {
+            if (PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected && status == NetworkStatus.Reconnecting)
+            {
+                __instance.Disconnect();
+                status = NetworkStatus.ReconnectFailed;
+                return true;
+            }
+            if (status == NetworkStatus.Connected)
+            {
+                PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected = true;
+            }
+            Plugin.SharedLogger.LogMessage(status);
+            return true;
+        }
+
+        // Token: 0x0400001E RID: 30
+        public static bool AlreadyConnected;
+    }
+
+    [HarmonyPatch(typeof(GameManager), "RestartProject")]
+    internal static class GameManager_ResetNetworkConnectStatus
+    {
+        // Token: 0x0600003F RID: 63 RVA: 0x00002D6C File Offset: 0x00000F6C
+        private static void Prefix()
+        {
+            PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected = false;
         }
     }
 }

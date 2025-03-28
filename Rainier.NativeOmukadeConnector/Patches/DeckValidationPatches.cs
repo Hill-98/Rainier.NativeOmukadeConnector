@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TPCI.DeckValidation;
 using static SharedSDKUtils.DeckValidation.DeckValidationService;
+using MatchLogic;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -35,20 +36,20 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrepare]
         static bool Prepare() => Plugin.Settings.ForceAllLegalityChecksToSucceed;
 
-        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForFormat))]
+        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForGameMode))]
         [HarmonyPrefix]
 
-        static void IsCardValidForFormat_Prefix(ref string format)
+        static void IsCardValidForGameMode_Prefix(ref GameMode gameMode)
         {
-            format = "expanded";
+            gameMode = GameMode.Expanded;
         }
 
         [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.ValidateDeck))]
         [HarmonyPrefix]
 
-        static void ValidateDeck_Prefix(ref string format)
+        static void ValidateDeck_Prefix(ref GameMode gameMode)
         {
-            format = "expanded";
+            gameMode = GameMode.Expanded;
         }
     }
 

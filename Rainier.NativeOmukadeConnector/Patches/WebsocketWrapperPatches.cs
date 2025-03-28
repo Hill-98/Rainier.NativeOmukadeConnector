@@ -106,7 +106,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
             return Enumerable.Repeat(WswCommon.platformSdkAssembly.GetType("ClientNetworking.HttpRouter").GetMethod("WebsocketEndpoint", BindingFlags.Instance | BindingFlags.Public), 1);
         }
 
-        static bool Prefix(ClientNetworking.Route ____route, ref Uri __result)
+        static bool Prefix(ClientNetworking.IdeRoute ____route, ref Uri __result)
         {
             string endpointToUse = Plugin.Settings.OmukadeEndpoint + "/websocket/v1/external/stomp";
             Plugin.SharedLogger.LogDebug($"Rewriting Websocket route from \"{____route.WebsocketUrl}\" to \"{endpointToUse}\"");
