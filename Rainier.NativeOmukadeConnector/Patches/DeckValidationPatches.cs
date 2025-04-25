@@ -51,6 +51,14 @@ namespace Rainier.NativeOmukadeConnector.Patches
         {
             gameMode = GameMode.Expanded;
         }
+
+        [HarmonyPatch(typeof(DeckValidationManager), "ValidateDeckIgnoreUnowned")]
+        [HarmonyPrefix]
+        private static bool ValidateDeckIgnoreUnowned_Prefix(IDeckValidationController ____deckValidationController, DeckInfo deck, ref bool __result)
+        {
+            __result = ____deckValidationController.ValidateDeckIgnoreUnowned(deck, GameMode.Expanded);
+            return false;
+        }
     }
 
     [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeck), typeof(RulesFormat), typeof(Dictionary<string, int>), typeof(DeckInfo), typeof(IQueryableCardDatabase), typeof(IConfigLoader))]
