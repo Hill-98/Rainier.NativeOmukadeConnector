@@ -101,17 +101,6 @@ namespace Rainier.NativeOmukadeConnector.Patches
             });
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(nameof(Client.EnterRegionAsync))]
-        static void WarnOfRegionChange()
-        {
-            StringBuilder sb = new StringBuilder($"{nameof(Client.EnterRegionAsync)} - Reconnecting due to change-of-region, which shouldn't be occuring under Omukade.\n");
-            StackTrace st = new System.Diagnostics.StackTrace(true);
-            BetterExceptionLogger.PrepareStacktraceString(sb, st);
-
-            Plugin.SharedLogger.LogWarning(sb.ToString());
-        }
-
 #if DEBUG_LOG_RX_MESSAGES
         [HarmonyPrefix]
         [HarmonyPatch("Dispatch")]
