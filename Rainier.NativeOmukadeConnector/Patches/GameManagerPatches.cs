@@ -88,7 +88,8 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrefix]
         private static bool OnNetworkChange_Prefix(PlatformRainierClient __instance, ref NetworkStatus status)
         {
-            if (PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected && status == NetworkStatus.Reconnecting)
+            string gameId = __instance.Client.CurrentGameId();
+            if (PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected && status == NetworkStatus.Reconnecting && (!string.IsNullOrWhiteSpace(gameId) && gameId != Client.NoGameId))
             {
                 __instance.Disconnect();
                 status = NetworkStatus.ReconnectFailed;
