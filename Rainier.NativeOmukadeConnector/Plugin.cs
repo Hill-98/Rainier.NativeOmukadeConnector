@@ -26,9 +26,10 @@ using System.Linq;
 namespace Rainier.NativeOmukadeConnector
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency("2aecaf59-9969-4ea5-b41c-b1ee114568fb", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.1.4 (\"Auditioning Apple Rev4 Hill-98 mod\")";
+        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.2.1 (\"Auditioning Apple Rev1 Hill-98 mod\")";
         internal const string OMUKADE_VERSION = "Omukade Cheyenne-EX";
 
         internal static ManualLogSource SharedLogger;
@@ -37,6 +38,12 @@ namespace Rainier.NativeOmukadeConnector
         private void Awake()
         {
             SharedLogger = Logger;
+
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                var exception = (Exception)e.ExceptionObject;
+                Logger.LogError(exception.Message);
+            };
 
             if (!Environment.GetCommandLineArgs().Contains("--enable-omukade"))
             {

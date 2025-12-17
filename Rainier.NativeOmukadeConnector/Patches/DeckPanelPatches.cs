@@ -10,35 +10,10 @@ using System.Text;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
-    [HarmonyPatch(typeof(ModifiedDeckPanel))]
-    static class DeckPanelPatches
-    {
-        /*[HarmonyPatch("PopulateForCategory")]
-        [HarmonyTranspiler]
-        static IEnumerable<CodeInstruction> DeckPanelIgnoresUnownedCards(IEnumerable<CodeInstruction> instructions)
-        {
-            MethodInfo totalOwnedQuantityCall = typeof(ArchetypeDBCards).GetMethod(nameof(ArchetypeDBCards.TotalOwnedQuantity));
-
-            foreach(var instruction in instructions)
-            {
-                if(instruction.Calls(totalOwnedQuantityCall))
-                {
-                    /// Replace the call to <see cref="ArchetypeDBCards.TotalOwnedQuantity"/>
-                    yield return new CodeInstruction(OpCodes.Pop);
-                    yield return new CodeInstruction(OpCodes.Ldc_I4, 999);
-                }
-                else
-                {
-                    yield return instruction;
-                }
-            }
-        }*/
-    }
-
     [HarmonyPatch(typeof(ArchetypeDBCards))]
     static class ArchetypeDBCardsPatches
     {
-        [HarmonyPatch(nameof(ArchetypeDBCards.QuantityForCard))]
+        [HarmonyPatch(nameof(ArchetypeDBCards.CardNumber))]
         [HarmonyPrefix]
         static bool QuantityForCard(ref int __result)
         {

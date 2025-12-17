@@ -61,12 +61,16 @@ namespace Rainier.NativeOmukadeConnector.Patches
         }
     }
 
-    [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeck), typeof(RulesFormat), typeof(Dictionary<string, int>), typeof(DeckInfo), typeof(IQueryableCardDatabase), typeof(IConfigLoader))]
+    [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeck))]
     static class DeckValidationAlwaysIgnoreUnowned
     {
-        static bool Prefix(ref DeckValidPackage __result, RulesFormat format, DeckInfo deck, IQueryableCardDatabase cardDatabase, IConfigLoader configLoader)
+        static bool Prefix(ref DeckValidPackage __result, RulesFormat format, Dictionary<string, int> ownedCards, DeckInfo deck, IQueryableCardDatabase cardDatabase)
         {
-            __result = DeckValidationService.ValidateDeckIgnoreUnowned(format, deck, cardDatabase, configLoader);
+            if (ownedCards.Count == 0)
+            {
+                return true;
+            }
+            __result = DeckValidationService.ValidateDeckIgnoreUnowned(format, deck, cardDatabase);
             return false;
         }
     }
@@ -81,7 +85,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         {
             __result.entries = __result.entries.Where((state) =>
             {
-                return state.error != DeckValidState.Banned || ClientPatches.ImplementedExpandedCardsFromServer?.Contains(state.cardID) == true;
+                return state.error != DeckValidState.Banned;
 
             }).ToArray();
         }
@@ -90,7 +94,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
     [HarmonyPatch(typeof(RulesFormat), nameof(RulesFormat.IsCardValidForFormat))]
     static class RulesFormat_UseImplementedExpandedListInsteadOfFormats
     {
-        static bool Prepare() => Plugin.Settings.AskServerForImplementedCards && Plugin.Settings.AskServerForImplementedCards;
+        static bool Prepare() => Plugin.Settings.AskServerForImplementedCards;
 
         static bool Prefix(CardDataRow card, ref bool __result, DeckFormat ___format)
         {
