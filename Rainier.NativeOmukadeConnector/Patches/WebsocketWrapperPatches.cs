@@ -17,34 +17,25 @@
 **************************************************************************/
 
 using _Rainier.Scripts.Managers.StartUp;
+using ClientNetworking;
+using ClientNetworking.Codecs;
+using ClientNetworking.Models.Matchmaking;
+using ClientNetworking.Models.Routing;
+using ClientNetworking.Models.WebSocket;
+using ClientNetworking.Stomp;
+using ClientNetworking.Util;
 using HarmonyLib;
 using Newtonsoft.Json;
 using Omukade.Cheyenne.CustomMessages;
-using ClientNetworking;
-using ClientNetworking.Codecs;
-using ClientNetworking.Models;
-using ClientNetworking.Models.GameServer;
-using ClientNetworking.Models.Matchmaking;
-using ClientNetworking.Models.Query;
-using ClientNetworking.Models.User;
-using ClientNetworking.Models.WebSocket;
 using Rainier.NativeOmukadeConnector.Messages;
-using RainierClientSDK;
 using RainierClientSDK.Inventory;
 using SharedLogicUtils.DataTypes;
 using SharedLogicUtils.source.Services.Query.Contexts;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using TPCI.Commands;
-using TPCI.Localization;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -95,23 +86,104 @@ namespace Rainier.NativeOmukadeConnector.Patches
             => Traverse.Create(client).Field("_ws").Field("_connected").SetValue(true);
     }
 
+    [HarmonyPatch(typeof(HttpRouter), nameof(HttpRouter.UpdateRoute))]
+    public static class HttpRouter_UpdateRoute
+    {
+        public static QueryRouteResponse Response = null;
+
+        static void Prefix(HttpRouter __instance, QueryRouteResponse routeResponse)
+        {
+            if (__instance != WebsocketWrapper_OpenAsync.router)
+            {
+                Response = routeResponse;
+            }
+        }
+    }
+
     /// <summary>
     /// Rewrites the websocket endpoint to point to the Omukade server.
     /// </summary>
     [HarmonyPatch]
     public static class HttpRouter_WebsocketEndpoint
     {
+        public static Uri OrigWebsocketUrl = null;
         static IEnumerable<MethodBase> TargetMethods()
         {
             return Enumerable.Repeat(WswCommon.platformSdkAssembly.GetType("ClientNetworking.HttpRouter").GetMethod("WebsocketEndpoint", BindingFlags.Instance | BindingFlags.Public), 1);
         }
 
-        static bool Prefix(ClientNetworking.IdeRoute ____route, ref Uri __result)
+        static bool Prefix(HttpRouter __instance, ClientNetworking.IdeRoute ____route, ref Uri __result)
         {
+            if (__instance == WebsocketWrapper_OpenAsync.router)
+            {
+                return true;
+            }
+            OrigWebsocketUrl = ____route.WebsocketUrl;
             string endpointToUse = Plugin.Settings.OmukadeEndpoint + "/websocket/v1/external/stomp";
             Plugin.SharedLogger.LogDebug($"Rewriting Websocket route from \"{____route.WebsocketUrl}\" to \"{endpointToUse}\"");
             __result = new Uri(endpointToUse);
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(WebsocketWrapper), nameof(WebsocketWrapper.MakeWebsocketEndpointHeaders))]
+    public static class WebsocketWrapper_MakeWebsocketEndpointHeaders
+    {
+        static void Postfix(WebsocketWrapper __instance, ref Dictionary<string, string> __result)
+        {
+            if (__instance == WebsocketWrapper_OpenAsync.wrapper)
+            {
+                Plugin.SharedLogger.LogInfo("WebsocketWrapper_MakeWebsocketEndpointHeaders: break wrapper");
+                return;
+            }
+            __result.Remove("Authorization");
+            __result.Remove("x-user-flags");
+        }
+    }
+
+    [HarmonyPatch(typeof(WebsocketWrapper), nameof(WebsocketWrapper.OpenAsync))]
+    public static class WebsocketWrapper_OpenAsync
+    {
+        public static WebsocketWrapper wrapper = null;
+        public static HttpRouter router = null;
+
+        static void Postfix(WebsocketWrapper __instance)
+        {
+            if (wrapper == null)
+            {
+                try
+                {
+                    router = new HttpRouter(__instance._router._stage);
+                    router.SetServiceGroup(__instance._router.ServiceGroup);
+                    router.UpdateRoute(HttpRouter_UpdateRoute.Response);
+                    WebsocketPersistent persistent = new WebsocketPersistent(true, true, true);
+                    wrapper = new WebsocketWrapper(__instance._logger, router, __instance._token, new WebsocketWrapper.MessageDispatcher(Dispatch), __instance._serializer, __instance._settings, persistent, new NetworkStatusChangeHandler(ChangeNetworkStatus), new DisconnectRationaleHandler(ReportDisconnectRationale), new ServerTimeAvailable(() => { }), IncrementMetric, __instance._userAgentString);
+                    Task task = wrapper.OpenAsync();
+                    task.ContinueWith((t) =>
+                    {
+                        Plugin.SharedLogger.LogInfo("WebsocketWrapper_OpenAsync Postfix task done.");
+                        Plugin.SharedLogger.LogError(t.Exception);
+                    });
+                } catch(Exception e) {
+                    Plugin.SharedLogger.LogError(e);
+                }
+            }
+        }
+
+        public static void ChangeNetworkStatus(NetworkStatus newStatus)
+        {
+        }
+
+        public static void Dispatch(ref StompFrame frame, ReusableBuffer buffer)
+        {
+        }
+
+        public static void IncrementMetric(string name, string info)
+        {
+        }
+
+        public static void ReportDisconnectRationale(DisconnectRationale rationale)
+        {
         }
     }
 
@@ -139,6 +211,11 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPatch]
         public static bool InjectSdmMessagesToMatchmakingMessages(object __instance, ref object command, ref object body)
         {
+            if (__instance == WebsocketWrapper_OpenAsync.wrapper)
+            {
+                Plugin.SharedLogger.LogInfo("Wsw_SendCommand: break wrapper");
+                return true;
+            }
             if (body is ClientNetworking.Models.Account.SessionUpdatePayload || body is SessionStart)
             {
                 Plugin.SharedLogger.LogDebug($"Intentionally swallowing sensitive message {body.GetType().Name} that shouldn't be sent to Omukade.");
@@ -192,6 +269,11 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPostfix]
         static void Postfix(object __instance, object __result)
         {
+            if (__instance == WebsocketWrapper_OpenAsync.wrapper)
+            {
+                Plugin.SharedLogger.LogInfo("Wsw_CreateWebsocket: break wrapper");
+                return;
+            }
             WswCommon.wswInstance = __instance;
 
             // result is WebsocketClient, a private type

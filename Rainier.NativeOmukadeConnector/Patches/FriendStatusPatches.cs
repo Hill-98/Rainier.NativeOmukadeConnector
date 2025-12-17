@@ -37,7 +37,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
     internal static class FriendStatusPatches
     {
         static readonly TimeSpan TIMEOUT_FOR_FRIEND_MESSAGES = new TimeSpan(hours: 0, minutes: 0, seconds: 10);
-        
+
 
         [HarmonyPatch(nameof(Client.GetFriendOnlineStatusAsync))]
         [HarmonyPrefix]
