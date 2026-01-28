@@ -39,7 +39,7 @@ using System.Threading.Tasks;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
-    /// <summary>
+    /// <summary>               
     /// Holds common fields used for WebsocketWrapper patches, helpers for interacting with WSW objects, and reflection information for WSW fields/methods.
     /// </summary>
     internal static class WswCommon
@@ -65,7 +65,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         /// </summary>
         internal static void InjectUpsockMessage<T>(object wswWrapper, T message) where T : class
         {
-            Command<T> commandToSend = new Command<T>("/omukade10/sdm", reliable: false);
+            Command<T> commandToSend = new Command<T>(false);
             WswCommon._SendCommandGeneric.MakeGenericMethod(typeof(T)).Invoke(wswWrapper, new object[] { commandToSend, message });
         }
 
