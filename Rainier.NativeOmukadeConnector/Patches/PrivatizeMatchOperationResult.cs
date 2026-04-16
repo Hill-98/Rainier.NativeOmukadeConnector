@@ -19,19 +19,22 @@
 using HarmonyLib;
 using MatchLogic;
 using RainierClientSDK;
+using SharedSDKUtils;
 using System.Collections.Generic;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
-    [HarmonyPatch(typeof(MatchInfo))]
+    [HarmonyPatch(typeof(MatchOperationMessageHandler))]
     internal class PrivatizeMatchOperationResult
     {
-        [HarmonyPatch("UpdateWithResults")]
+        [HarmonyPatch("DerivedHandleMessage")]
         [HarmonyPrefix]
-        internal static void Privatize(ref MatchOperationResult result, MatchInfo __instance)
+        internal static void Privatize(HandleMessageContext context)
         {
+            MatchInfo matchInfo = context.MatchInfo;
+            MatchOperationResult value = context.ServerMessage.GetValue<MatchOperationResult>();
             // copied from 1.23.1 client
-            MatchBoard boardState = __instance.GetBoardState();
+            MatchBoard boardState = matchInfo.GetBoardState();
             if (boardState == null || boardState.player1 == null || boardState.player2 == null)
             {
                 return;
@@ -40,10 +43,11 @@ namespace Rainier.NativeOmukadeConnector.Patches
             List<string> list2 = new List<string>();
             bool flag = boardState.player1.GetMetaData<int>(MetaDataKey.PlayerSetupState, -1, true) == 0;
             bool flag2 = boardState.player2.GetMetaData<int>(MetaDataKey.PlayerSetupState, -1, true) == 0;
-            foreach (ActionModification actionModification in result.actionModifications)
+            foreach (ActionModification actionModification in value.actionModifications)
             {
-                actionModification.Privatize(flag, flag2, __instance.isPlayer1, list, list2);
+                actionModification.Privatize(flag, flag2, matchInfo.isPlayer1, list, list2);
             }
+            context.ServerMessage.OverwriteDataWithNewObject(value);
         }
     }
 }
