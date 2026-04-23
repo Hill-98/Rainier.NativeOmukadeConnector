@@ -18,10 +18,8 @@
 
 using CardDatabase.DataAccess;
 using HarmonyLib;
-using SharedLogicUtils.Config;
 using SharedSDKUtils.DeckValidation;
 using SharedSDKUtils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using TPCI.DeckValidation;

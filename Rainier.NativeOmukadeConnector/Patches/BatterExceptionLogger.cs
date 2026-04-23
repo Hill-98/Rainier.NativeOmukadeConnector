@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -61,7 +60,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
             sb.AppendLine();
             sb.AppendLine("Stack Trace:");
 
-            System.Diagnostics.StackTrace st = new System.Diagnostics.StackTrace(exception);
+            StackTrace st = new StackTrace(exception);
             PrepareStacktraceString(sb, st);
 
             return sb.ToString();

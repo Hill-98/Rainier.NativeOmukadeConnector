@@ -21,9 +21,6 @@ using Omukade.Cheyenne.CustomMessages;
 using ClientNetworking;
 using ClientNetworking.Codecs;
 using Rainier.NativeOmukadeConnector.Messages;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {

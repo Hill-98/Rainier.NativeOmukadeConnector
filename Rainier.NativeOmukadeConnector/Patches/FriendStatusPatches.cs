@@ -21,15 +21,10 @@ using ClientNetworking;
 using RainierClientSDK.source.Friend.Implementations;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using ClientNetworking.Models.Friend;
-using System.Collections.Concurrent;
 using Rainier.NativeOmukadeConnector.Messages;
-using System.Linq;
-using Newtonsoft.Json;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -72,7 +67,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         internal static List<string> GetOnlineFriendsFromOmukade(IClient instance, List<string> concernedFriends)
         {
             using ManualResetEvent getFriendsEvent = new ManualResetEvent(initialState: false);
-            OnlineFriendsResponse? ofr = null;
+            OnlineFriendsResponse ofr = null;
             uint txId = unchecked((uint)DateTime.UtcNow.Ticks);
             // Plugin.SharedLogger.LogInfo($"Preparing to get friend data (TXID {txId})...");
             Action<OnlineFriendsResponse> respondToGetFriends = (OnlineFriendsResponse ofrReceived) =>
@@ -106,49 +101,30 @@ namespace Rainier.NativeOmukadeConnector.Patches
         }
     }
 
-    [HarmonyPatch]
+    [HarmonyPatch(typeof(PlatformFriendService), nameof(PlatformFriendService.GetFriendOnlineStatus))]
     internal static class GetFriendsPatch
     {
-        // RainierClientSDK.source.Friend.Implementations.PlatformFriendService.<>c__DisplayClass26_0
-        // This patches one of the async method fragments for PlatformFriendService.GetFriendsAsync.
-        // I didn't want to hard-code it to a specific method name, as the name may be unstable from build to build.
-        static IEnumerable<MethodBase> TargetMethods() => typeof(PlatformFriendService)
-            .GetNestedTypes(BindingFlags.Instance | BindingFlags.NonPublic)
-            .SelectMany(t => t.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
-            .Where(m => m.Name.StartsWith($"<{nameof(PlatformFriendService.GetFriendsAsync)}>"))
-            .Where(m => { ParameterInfo[] mParams = m.GetParameters(); return mParams.Length == 2 && mParams[0].ParameterType == typeof(IClient) && mParams[1].ParameterType == typeof(GetAllFriendsResponse); })
-            .Take(1);
-
-        static void Prefix(IClient sdk, GetAllFriendsResponse message)
+        static void Prefix(string friendPtcsId, PlatformFriendService __instance, ref bool __result)
         {
-            Plugin.SharedLogger.LogInfo($"{nameof(PlatformFriendService.GetFriendsAsync)} - Checking Omukade for all online friends");
+            Plugin.SharedLogger.LogInfo($"{nameof(PlatformFriendService.GetFriendOnlineStatus)} - Checking Omukade for friend online status");
             if (Plugin.Settings.ForceFriendsToBeOnline)
             {
-                foreach (FriendInfo friend in message.friendInfos)
-                {
-                    friend.isOnline = true;
-                }
+                __result = true;
             }
             else
             {
-                List<string> friendIds = message.friendInfos.Select(f => f.signedAccountId.accountId).ToList();
+                List<string> friendIds = [friendPtcsId];
                 List<string> onlineFriendsFound;
                 try
                 {
-                    onlineFriendsFound = FriendStatusPatches.GetOnlineFriendsFromOmukade(sdk, friendIds);
+                    onlineFriendsFound = FriendStatusPatches.GetOnlineFriendsFromOmukade(__instance.client, friendIds);
                 }
                 catch(Exception e)
                 {
                     BetterExceptionLogger.LogException(e);
                     throw;
                 }
-                HashSet<string> actuallyOnlineFriends = new HashSet<string>(onlineFriendsFound);
-
-                foreach (FriendInfo friend in message.friendInfos)
-                {
-                    friend.isOnline = actuallyOnlineFriends.Contains(friend.signedAccountId.accountId);
-                    // Plugin.SharedLogger.LogInfo($"|- Friend {friend.friendScreenName} - {friend.signedAccountId.accountId} - IsOnline {friend.isOnline}");
-                }
+                __result = onlineFriendsFound.Count > 0;
             }
         }
     }

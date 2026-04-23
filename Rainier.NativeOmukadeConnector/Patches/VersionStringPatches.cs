@@ -17,9 +17,6 @@
 **************************************************************************/
 
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using TPCI.Build;
 

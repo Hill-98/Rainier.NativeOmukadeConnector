@@ -1,10 +1,5 @@
 ﻿using Newtonsoft.Json;
-using ClientNetworking.Models.Inventory;
-using ClientNetworking.Models.User;
 using SharedLogicUtils.DataTypes;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 /*************************************************************************
 * Rainier Native Omukade Connector

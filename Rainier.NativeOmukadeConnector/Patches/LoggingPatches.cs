@@ -1,10 +1,7 @@
 ﻿using HarmonyLib;
 using ClientNetworking;
 using SharedLogicUtils.source.Logging;
-using SharedLogicUtils.source.Logging.Implementations;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using TPCI.Networking;
 
 namespace Rainier.NativeOmukadeConnector.Patches

@@ -19,7 +19,6 @@
 using HarmonyLib;
 using MatchLogic;
 using RainierClientSDK;
-using SharedSDKUtils;
 using System.Collections.Generic;
 
 namespace Rainier.NativeOmukadeConnector.Patches

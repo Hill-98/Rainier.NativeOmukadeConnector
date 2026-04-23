@@ -19,9 +19,6 @@
 using HarmonyLib;
 using ClientNetworking;
 using ClientNetworking.Models.GameServer;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Rainier.NativeOmukadeConnector.Patches

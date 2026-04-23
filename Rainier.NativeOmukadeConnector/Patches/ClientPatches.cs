@@ -18,20 +18,14 @@
 
 // #define DEBUG_LOG_RX_MESSAGES
 using HarmonyLib;
-using Newtonsoft.Json;
 using Omukade.Cheyenne.CustomMessages;
 using ClientNetworking;
-using ClientNetworking.Stomp;
 using ClientNetworking.Util;
 using Rainier.NativeOmukadeConnector.Messages;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Reflection;
-using System.Text;
-using System.Threading;
+using ClientNetworking.Models.Friend;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -39,12 +33,25 @@ namespace Rainier.NativeOmukadeConnector.Patches
     internal static class ClientBuilderPatches
     {
         [HarmonyPrefix]
-        [HarmonyPatch(nameof(ClientBuilder.Build), new Type[] { typeof(string) })]
+        [HarmonyPatch(nameof(ClientBuilder.Build), new Type[] { typeof(string) })]  
         static void Build(ClientBuilder __instance)
         {
             __instance.SetWebsocketReceiptsEnabled(false);
 #warning TODO: Implement receipts in Omukade
             Plugin.SharedLogger.LogInfo(nameof(ClientBuilderPatches) + ": Enable Message Receipts patched to: false");
+        }
+    }
+
+    [HarmonyPatch(typeof(Client))]
+    internal static class ClientFriendsPatch
+    {
+        [HarmonyPrefix]
+        [HarmonyPatch(nameof(Client.GetAllFriends))]
+        static bool Prefix(string externalToken, List<string> profileKeys)
+        {
+            GetAllFriendsRequest body = new GetAllFriendsRequest(externalToken, profileKeys);
+            WebsocketWrapper_OpenAsync.wrapper.SendCommand(Commands.GetAllFriendsRequest, body);
+            return false;
         }
     }
 

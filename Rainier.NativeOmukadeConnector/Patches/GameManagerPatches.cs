@@ -1,13 +1,10 @@
 ﻿using ClientNetworking;
 using HarmonyLib;
 using RainierClientSDK;
-using RainierClientSDK.source.Friend.Implementations;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 using TMPro;
 
 namespace Rainier.NativeOmukadeConnector.Patches

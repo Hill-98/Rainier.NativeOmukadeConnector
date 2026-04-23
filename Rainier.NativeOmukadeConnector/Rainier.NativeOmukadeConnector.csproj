@@ -4,11 +4,11 @@
     <TargetFramework>netstandard2.1</TargetFramework>
     <AssemblyName>Rainier.NativeOmukadeConnector</AssemblyName>
     <Description>Less primative redirector sending WebSocket calls to an Omukade instance</Description>
-    <Version>2.2.4</Version>
+    <Version>2.2.5</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <AssemblyVersion>2.2.4</AssemblyVersion>
-    <FileVersion>2.2.4</FileVersion>
+    <AssemblyVersion>2.2.5</AssemblyVersion>
+    <FileVersion>2.2.5</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,74 +30,62 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Reference Include="Assembly-CSharp">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Assembly-CSharp.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Assembly-CSharp-firstpass">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Assembly-CSharp-firstpass.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="CardDatabase.DataAccess">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\CardDatabase.DataAccess.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="MatchLogic">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\MatchLogic.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="ClientNetworking">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\ClientNetworking.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="RainierClientSDK">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\RainierClientSDK.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="SharedLogicUtils">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\SharedLogicUtils.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TelemetryCore">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TelemetryCore.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TPCI.PTCS">
-		  <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCI.PTCS.dll</HintPath>
-		  <Private>False</Private>
-		</Reference>
-		<Reference Include="TPCIBuildtoolsRuntime">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCIBuildtoolsRuntime.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="Unity.TextMeshPro">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Unity.TextMeshPro.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="UnityEngine.UI">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\UnityEngine.UI.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="RainierCompendium">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\RainierCompendium.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TPCICommand">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCICommand.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TPCINetworkSystem">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCINetworkSystem.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TPCIAssetBundleSystem">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCIAssetBundleSystem.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-		<Reference Include="TPCILocalization">
-			<HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCILocalization.dll</HintPath>
-			<Private>False</Private>
-		</Reference>
-	</ItemGroup>
+    <ItemGroup>
+        <Reference Include="Assembly-CSharp">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Assembly-CSharp.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Assembly-CSharp-firstpass">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Assembly-CSharp-firstpass.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="CardDatabase.DataAccess">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\CardDatabase.DataAccess.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="MatchLogic">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\MatchLogic.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="ClientNetworking">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\ClientNetworking.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RainierClientSDK">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\RainierClientSDK.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="SharedLogicUtils">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\SharedLogicUtils.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="TPCI.PTCS">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCI.PTCS.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="TPCI.RainierClient">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCI.RainierClient.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="TPCI.Shared.Singletons">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCI.Shared.Singletons.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="TPCIBuildtoolsRuntime">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCIBuildtoolsRuntime.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="Unity.TextMeshPro">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\Unity.TextMeshPro.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\UnityEngine.UI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="TPCINetworkSystem">
+          <HintPath>$(LOCALAPPDATA)\omukade\rainier-shared\rainier-client_PAR\TPCINetworkSystem.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+    </ItemGroup>
 </Project>

@@ -16,9 +16,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-using _Rainier.Scripts.Managers.StartUp;
 using ClientNetworking;
 using ClientNetworking.Codecs;
+using ClientNetworking.Models.Account;
+using ClientNetworking.Models.Friend;
 using ClientNetworking.Models.Matchmaking;
 using ClientNetworking.Models.Routing;
 using ClientNetworking.Models.WebSocket;
@@ -36,6 +37,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using static ClientNetworking.WebsocketWrapper;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -147,17 +149,20 @@ namespace Rainier.NativeOmukadeConnector.Patches
         public static WebsocketWrapper wrapper = null;
         public static HttpRouter router = null;
 
+        private static MessageDispatcher oDispatch = null;
+
         static void Postfix(WebsocketWrapper __instance)
         {
             if (wrapper == null)
             {
+                oDispatch = __instance._dispatcher;
                 try
                 {
                     router = new HttpRouter(__instance._router._stage);
                     router.SetServiceGroup(__instance._router.ServiceGroup);
                     router.UpdateRoute(HttpRouter_UpdateRoute.Response);
                     WebsocketPersistent persistent = new WebsocketPersistent(true, true, true);
-                    wrapper = new WebsocketWrapper(__instance._logger, router, __instance._token, new WebsocketWrapper.MessageDispatcher(Dispatch), __instance._serializer, __instance._settings, persistent, new NetworkStatusChangeHandler(ChangeNetworkStatus), new DisconnectRationaleHandler(ReportDisconnectRationale), new ServerTimeAvailable(() => { }), IncrementMetric, __instance._userAgentString);
+                    wrapper = new WebsocketWrapper(__instance._logger, router, __instance._token, new MessageDispatcher(Dispatch), __instance._serializer, __instance._settings, persistent, new NetworkStatusChangeHandler(ChangeNetworkStatus), new DisconnectRationaleHandler(ReportDisconnectRationale), new ServerTimeAvailable(() => { }), IncrementMetric, __instance._userAgentString);
                     Task task = wrapper.OpenAsync();
                     task.ContinueWith((t) =>
                     {
@@ -176,6 +181,10 @@ namespace Rainier.NativeOmukadeConnector.Patches
 
         public static void Dispatch(ref StompFrame frame, ReusableBuffer buffer)
         {
+            if (frame.Payload == nameof(GetAllFriendsResponse))
+            {
+                oDispatch(ref frame, buffer);
+            }
         }
 
         public static void IncrementMetric(string name, string info)
@@ -200,7 +209,8 @@ namespace Rainier.NativeOmukadeConnector.Patches
                 typeof(ProposeDirectMatch),
                 typeof(AcceptDirectMatch),
 
-                typeof(ClientNetworking.Models.Account.SessionUpdatePayload),
+                typeof(GetAllFriendsRequest),
+                typeof(SessionUpdatePayload),
                 typeof(SessionStart),
             };
 
@@ -216,7 +226,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
                 Plugin.SharedLogger.LogInfo("Wsw_SendCommand: break wrapper");
                 return true;
             }
-            if (body is ClientNetworking.Models.Account.SessionUpdatePayload || body is SessionStart)
+            if (body is SessionUpdatePayload || body is SessionStart || body is GetAllFriendsRequest)
             {
                 Plugin.SharedLogger.LogDebug($"Intentionally swallowing sensitive message {body.GetType().Name} that shouldn't be sent to Omukade.");
                 return false;
