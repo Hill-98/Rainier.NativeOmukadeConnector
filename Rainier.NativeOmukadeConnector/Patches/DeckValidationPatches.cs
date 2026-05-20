@@ -54,7 +54,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrefix]
         private static bool ValidateDeckIgnoreUnowned_Prefix(IDeckValidationController ____deckValidationController, DeckInfo deck, ref bool __result)
         {
-            __result = ____deckValidationController.ValidateDeckIgnoreUnowned(deck, GameMode.Expanded);
+            __result = ____deckValidationController.ValidateDeckIgnoreUnowned(deck, GameMode.Expanded, out _);
             return false;
         }
     }
