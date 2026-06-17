@@ -30,6 +30,8 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrefix]
         internal static void Privatize(HandleMessageContext context)
         {
+            if (!Plugin.Settings.PrivatizeMatchOperationResult) { return; }
+
             MatchInfo matchInfo = context.MatchInfo;
             MatchOperationResult value = context.ServerMessage.GetValue<MatchOperationResult>();
             // copied from 1.23.1 client

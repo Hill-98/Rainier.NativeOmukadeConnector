@@ -68,11 +68,9 @@ namespace Rainier.NativeOmukadeConnector.Patches
         }
     }
 
-    // Token: 0x0200001C RID: 28
     [HarmonyPatch(typeof(PlatformRainierClient))]
     internal static class PlatformRainierClient_DisableMultipleReconnections
     {
-        // Token: 0x0600003D RID: 61 RVA: 0x00002D2D File Offset: 0x00000F2D
         [HarmonyPatch("Setup")]
         [HarmonyPrefix]
         private static bool Setup_Prefix()
@@ -80,7 +78,6 @@ namespace Rainier.NativeOmukadeConnector.Patches
             return !PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected;
         }
 
-        // Token: 0x0600003E RID: 62 RVA: 0x00002D37 File Offset: 0x00000F37
         [HarmonyPatch("OnNetworkChange")]
         [HarmonyPrefix]
         private static bool OnNetworkChange_Prefix(PlatformRainierClient __instance, ref NetworkStatus status)
@@ -100,14 +97,12 @@ namespace Rainier.NativeOmukadeConnector.Patches
             return true;
         }
 
-        // Token: 0x0400001E RID: 30
         public static bool AlreadyConnected;
     }
 
     [HarmonyPatch(typeof(GameManager), "RestartProject")]
     internal static class GameManager_ResetNetworkConnectStatus
     {
-        // Token: 0x0600003F RID: 63 RVA: 0x00002D6C File Offset: 0x00000F6C
         private static void Prefix()
         {
             PlatformRainierClient_DisableMultipleReconnections.AlreadyConnected = false;
