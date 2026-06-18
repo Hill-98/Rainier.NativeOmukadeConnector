@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using TPCI.Rainier.Features.DeckEditor;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -26,6 +27,18 @@ namespace Rainier.NativeOmukadeConnector.Patches
         static bool TotalOwnedQuantityForSpecificCard(ref int __result)
         {
             __result = 60;
+            return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(CraftUnownedCardsButtonController))]
+    static class CraftUnownedCardsButtonControllerPatches
+    {
+        [HarmonyPatch(nameof(CraftUnownedCardsButtonController.CanShowCraftAllButton))]
+        [HarmonyPrefix]
+        static bool CanShowCraftAllButton(ref bool __result)
+        {
+            __result = false;
             return false;
         }
     }
