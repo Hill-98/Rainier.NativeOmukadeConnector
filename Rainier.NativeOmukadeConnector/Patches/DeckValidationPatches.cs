@@ -18,13 +18,15 @@
 
 using CardDatabase.DataAccess;
 using HarmonyLib;
-using SharedSDKUtils.DeckValidation;
+using MatchLogic;
+using RainierClientSDK.CompendiumLoader;
+using SharedLogicUtils.Config;
 using SharedSDKUtils;
+using SharedSDKUtils.DeckValidation;
 using System.Collections.Generic;
 using System.Linq;
 using TPCI.DeckValidation;
 using static SharedSDKUtils.DeckValidation.DeckValidationService;
-using MatchLogic;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -37,9 +39,10 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForGameMode))]
         [HarmonyPrefix]
 
-        static void IsCardValidForGameMode_Prefix(ref GameMode gameMode)
+        static bool IsCardValidForGameMode_Prefix(ref bool __result, GameMode gameMode, ICardDataRow card)
         {
-            gameMode = GameMode.Expanded;
+            __result = true;
+            return false;
         }
 
         [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.ValidateDeck))]
@@ -50,7 +53,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
             gameMode = GameMode.Expanded;
         }
 
-        [HarmonyPatch(typeof(DeckValidationManager), "ValidateDeckIgnoreUnowned")]
+        [HarmonyPatch(typeof(DeckValidationManager), nameof(DeckValidationManager.ValidateDeckIgnoreUnowned))]
         [HarmonyPrefix]
         private static bool ValidateDeckIgnoreUnowned_Prefix(IDeckValidationController ____deckValidationController, DeckInfo deck, ref bool __result)
         {
@@ -83,8 +86,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         {
             __result.entries = __result.entries.Where((state) =>
             {
-                return state.error != DeckValidState.Banned;
-
+                return state.error != DeckValidState.Banned && state.error != DeckValidState.CardNotAllowedInFormat;
             }).ToArray();
         }
     }
