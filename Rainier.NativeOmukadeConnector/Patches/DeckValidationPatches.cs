@@ -19,49 +19,20 @@
 using CardDatabase.DataAccess;
 using HarmonyLib;
 using MatchLogic;
-using RainierClientSDK.CompendiumLoader;
-using SharedLogicUtils.Config;
+using SharedLogicUtils.source.DeckValidation;
 using SharedSDKUtils;
 using SharedSDKUtils.DeckValidation;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection.Emit;
+using ThirdParty.Collections;
 using TPCI.DeckValidation;
 using static SharedSDKUtils.DeckValidation.DeckValidationService;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
-    [HarmonyPatch(typeof(DefaultDeckValidationController))]
-    static class DeckValidationAllUseExpandedFormat
-    {
-        [HarmonyPrepare]
-        static bool Prepare() => Plugin.Settings.ForceAllLegalityChecksToSucceed;
-
-        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForGameMode))]
-        [HarmonyPrefix]
-
-        static bool IsCardValidForGameMode_Prefix(ref bool __result, GameMode gameMode, ICardDataRow card)
-        {
-            __result = true;
-            return false;
-        }
-
-        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.ValidateDeck))]
-        [HarmonyPrefix]
-
-        static void ValidateDeck_Prefix(ref GameMode gameMode)
-        {
-            gameMode = GameMode.Expanded;
-        }
-
-        [HarmonyPatch(typeof(DeckValidationManager), nameof(DeckValidationManager.ValidateDeckIgnoreUnowned))]
-        [HarmonyPrefix]
-        private static bool ValidateDeckIgnoreUnowned_Prefix(IDeckValidationController ____deckValidationController, DeckInfo deck, ref bool __result)
-        {
-            __result = ____deckValidationController.ValidateDeckIgnoreUnowned(deck, GameMode.Expanded, out _);
-            return false;
-        }
-    }
-
     [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeck))]
     static class DeckValidationAlwaysIgnoreUnowned
     {
@@ -76,18 +47,62 @@ namespace Rainier.NativeOmukadeConnector.Patches
         }
     }
 
-    [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeckIgnoreUnowned))]
+    [HarmonyPatch]
     static class DeckValidationIgnoreUnowned_OptionallyBypassAllChecks
     {
+        static bool PlayButtonHanding = false;
+
         [HarmonyPrepare]
         static bool Prepare() => Plugin.Settings.ForceAllLegalityChecksToSucceed;
 
-        static void Postfix(ref DeckValidPackage __result)
+        [HarmonyPatch(typeof(DeckValidationService), nameof(DeckValidationService.ValidateDeckIgnoreUnowned))]
+        [HarmonyPostfix]
+        static void DeckValidationService_ValidateDeckIgnoreUnowned(ref DeckValidPackage __result)
         {
             __result.entries = __result.entries.Where((state) =>
             {
                 return state.error != DeckValidState.Banned && state.error != DeckValidState.CardNotAllowedInFormat;
             }).ToArray();
+        }
+
+        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForGameMode))]
+        [HarmonyPrefix]
+
+        static bool DefaultDeckValidationController_IsCardValidForGameMode(ref bool __result)
+        {
+            __result = true;
+            return false;
+        }
+
+        [HarmonyPatch(typeof(DecksAlwaysInvalidValidator), nameof(DecksAlwaysInvalidValidator.ValidateDeck))]
+        [HarmonyPatch(typeof(DecksAlwaysInvalidValidator), nameof(DecksAlwaysInvalidValidator.ValidateDeckIgnoreUnowned))]
+        [HarmonyPrefix]
+        static bool DecksAlwaysInvalidValidator_ValidateDeck(ref DeckValidPackage __result)
+        {
+            __result = new DeckValidPackage()
+            {
+                entries = []
+            };
+            return false;
+        }
+
+        [HarmonyPatch(typeof(HUBRankedController), nameof(HUBRankedController.Play))]
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> HUBRankedController_Play(IEnumerable<CodeInstruction> instructions)
+        {
+            return new CodeMatcher(instructions)
+                .MatchForward(false,
+                    new CodeMatch(OpCodes.Callvirt, AccessTools.Method(typeof(DeckInfo), nameof(DeckInfo.IsValid)))
+                )
+                .SetInstruction(
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(DeckValidationIgnoreUnowned_OptionallyBypassAllChecks), nameof(FakeIsValid)))
+                )
+                .InstructionEnumeration();
+        }
+
+        static bool FakeIsValid(DeckInfo instance, GameMode gameMode, ILogger optLogger = null)
+        {
+            return true;
         }
     }
 

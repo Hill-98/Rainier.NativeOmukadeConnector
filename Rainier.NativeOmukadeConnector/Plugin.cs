@@ -29,7 +29,7 @@ namespace Rainier.NativeOmukadeConnector
     [BepInDependency("2aecaf59-9969-4ea5-b41c-b1ee114568fb", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.2.7 (\"Auditioning Apple Rev1 Hill-98 mod\")";
+        internal const string VERSION_STRING = "Native Omukade Connector \"NOC\" 2.2.8 (\"Auditioning Apple Rev1 Hill-98 mod\")";
         internal const string OMUKADE_VERSION = "Omukade Cheyenne-EX";
 
         internal static ManualLogSource SharedLogger;
@@ -45,7 +45,7 @@ namespace Rainier.NativeOmukadeConnector
                 Logger.LogError(exception.Message);
             };
 
-            if (!Environment.GetCommandLineArgs().Contains("--enable-omukade"))
+            if (!Environment.GetCommandLineArgs().Contains("--enable-omukade") && Environment.GetEnvironmentVariable("OMUKADE_CONNECTOR_CONFIG") == null)
             {
                 SharedLogger.LogWarning("Omukade not enabled by command-line; goodbye");
                 return;
