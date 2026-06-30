@@ -1,44 +1,29 @@
-﻿using HarmonyLib;
-using TPCI.Rainier.Features.DeckEditor;
+﻿using _Rainier.Scripts.UI.DeckEditor.Collection.OwnedCardQuantityProviders;
+using HarmonyLib;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
-    [HarmonyPatch(typeof(ArchetypeDBCards))]
-    static class ArchetypeDBCardsPatches
+    [HarmonyPatch]
+    static class IArchetypeOwnedCardQuantityProviderPatches
     {
-        [HarmonyPatch(nameof(ArchetypeDBCards.CardNumber))]
+        [HarmonyPatch(typeof(ArchetypeIdDictionaryCountProvider), nameof(ArchetypeIdDictionaryCountProvider.GetOwnedQuantityForArchetypeOrZero))]
         [HarmonyPrefix]
-        static bool QuantityForCard(ref int __result)
-        {
-            __result = 60;
-            return false;
-        }
-
-        [HarmonyPatch(nameof(ArchetypeDBCards.TotalOwnedQuantity))]
-        [HarmonyPrefix]
-        static bool TotalOwnedQuantity(ref int __result)
-        {
-            __result = 60;
-            return false;
-        }
-
-        [HarmonyPatch(nameof(ArchetypeDBCards.TotalOwnedQuantityForSpecificCard))]
-        [HarmonyPrefix]
-        static bool TotalOwnedQuantityForSpecificCard(ref int __result)
+        static bool GetOwnedQuantityForArchetypeOrZero(ref int __result)
         {
             __result = 60;
             return false;
         }
     }
 
-    [HarmonyPatch(typeof(CraftUnownedCardsButtonController))]
-    static class CraftUnownedCardsButtonControllerPatches
+    [HarmonyPatch]
+    static class IOwnedCardQuantityProviderPatches
     {
-        [HarmonyPatch(nameof(CraftUnownedCardsButtonController.CanShowCraftAllButton))]
+        [HarmonyPatch(typeof(CardIdDictionaryCountProvider), nameof(CardIdDictionaryCountProvider.GetOwnedQuantityForCardOrZero))]
+        [HarmonyPatch(typeof(CardIdDictionaryCountProvider), nameof(SimpleCardCountProvider.GetOwnedQuantityForCardOrZero))]    
         [HarmonyPrefix]
-        static bool CanShowCraftAllButton(ref bool __result)
+        static bool GetOwnedQuantityForCardOrZero(ref int __result)
         {
-            __result = false;
+            __result = 60;
             return false;
         }
     }
