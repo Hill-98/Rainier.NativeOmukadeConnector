@@ -19,15 +19,12 @@
 using CardDatabase.DataAccess;
 using HarmonyLib;
 using MatchLogic;
-using SharedLogicUtils.source.DeckValidation;
 using SharedSDKUtils;
 using SharedSDKUtils.DeckValidation;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Emit;
-using ThirdParty.Collections;
 using TPCI.DeckValidation;
 using static SharedSDKUtils.DeckValidation.DeckValidationService;
 
@@ -68,22 +65,30 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.IsCardValidForGameMode))]
         [HarmonyPrefix]
 
-        static bool DefaultDeckValidationController_IsCardValidForGameMode(ref bool __result)
+        static bool DefaultDeckValidationController_IsCardValidForGameMode(ref bool __result, ICardDataRow card)
         {
+            if (card.CardSet.SeriesCode == "BW" || card.CardSet.SeriesCode == "XY")
+            {
+                if (CardDatabaseManager.instance)
+                {
+                    IEnumerable<CardDataRow> cards = CardDatabaseManager.instance.Select($"[archetypeId] = {card.ArchetypeID}", false);
+                    __result = cards.Any((c) => c.CardSet.SeriesCode != "BW" && c.CardSet.SeriesCode != "XY");
+                } else
+                {
+                    __result = false;
+                }
+                    return false;
+            }
             __result = true;
             return false;
         }
 
-        [HarmonyPatch(typeof(DecksAlwaysInvalidValidator), nameof(DecksAlwaysInvalidValidator.ValidateDeck))]
-        [HarmonyPatch(typeof(DecksAlwaysInvalidValidator), nameof(DecksAlwaysInvalidValidator.ValidateDeckIgnoreUnowned))]
+        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.ValidateDeck))]
+        [HarmonyPatch(typeof(DefaultDeckValidationController), nameof(DefaultDeckValidationController.ValidateDeckIgnoreUnowned))]
         [HarmonyPrefix]
-        static bool DecksAlwaysInvalidValidator_ValidateDeck(ref DeckValidPackage __result)
+        static void DefaultDeckValidationController_ValidateDeck(ref GameMode gameMode)
         {
-            __result = new DeckValidPackage()
-            {
-                entries = []
-            };
-            return false;
+            gameMode = GameMode.Expanded;
         }
 
         [HarmonyPatch(typeof(HUBRankedController), nameof(HUBRankedController.Play))]
