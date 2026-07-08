@@ -101,30 +101,39 @@ namespace Rainier.NativeOmukadeConnector.Patches
         }
     }
 
-    [HarmonyPatch(typeof(PlatformFriendService), nameof(PlatformFriendService.GetFriendOnlineStatus))]
+    [HarmonyPatch(typeof(PlatformFriendService), nameof(PlatformFriendService._UpdateFriendsCache))]
     internal static class GetFriendsPatch
     {
-        static void Prefix(string friendPtcsId, PlatformFriendService __instance, ref bool __result)
+        static void Prefix(GetAllFriendsResponse response, PlatformFriendService __instance)
         {
-            Plugin.SharedLogger.LogInfo($"{nameof(PlatformFriendService.GetFriendOnlineStatus)} - Checking Omukade for friend online status");
+            Plugin.SharedLogger.LogInfo($"{nameof(PlatformFriendService._UpdateFriendsCache)} - Checking Omukade for friend online status");
             if (Plugin.Settings.ForceFriendsToBeOnline)
             {
-                __result = true;
+                foreach (var friendInfo in response.friendInfos)
+                {
+                    friendInfo.isOnline = true;
+                }
             }
             else
             {
-                List<string> friendIds = [friendPtcsId];
+                List<string> friendIds = [];
+                foreach (var friendInfo in response.friendInfos)
+                {
+                    friendIds.Add(friendInfo.friendAccountId);
+                }
                 List<string> onlineFriendsFound;
                 try
                 {
                     onlineFriendsFound = FriendStatusPatches.GetOnlineFriendsFromOmukade(__instance.client, friendIds);
+                    foreach (var friendInfo in response.friendInfos)
+                    {
+                        friendInfo.isOnline = onlineFriendsFound.Contains(friendInfo.friendAccountId);
+                    }
                 }
                 catch(Exception e)
                 {
                     BetterExceptionLogger.LogException(e);
-                    throw;
                 }
-                __result = onlineFriendsFound.Count > 0;
             }
         }
     }
