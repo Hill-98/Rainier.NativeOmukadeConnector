@@ -119,7 +119,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
                 List<string> friendIds = [];
                 foreach (var friendInfo in response.friendInfos)
                 {
-                    friendIds.Add(friendInfo.friendAccountId);
+                    friendIds.Add(friendInfo.signedAccountId.accountId);
                 }
                 List<string> onlineFriendsFound;
                 try
@@ -127,7 +127,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
                     onlineFriendsFound = FriendStatusPatches.GetOnlineFriendsFromOmukade(__instance.client, friendIds);
                     foreach (var friendInfo in response.friendInfos)
                     {
-                        friendInfo.isOnline = onlineFriendsFound.Contains(friendInfo.friendAccountId);
+                        friendInfo.isOnline = onlineFriendsFound.Contains(friendInfo.signedAccountId.accountId);
                     }
                 }
                 catch(Exception e)
