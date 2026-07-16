@@ -1,5 +1,5 @@
 ﻿/*************************************************************************
-* Rainier Native Omukade Connector
+* Omukade Cheyenne - A PTCGL "Rainier" Standalone Server
 * (c) 2022 Hastwell/Electrosheep Networks 
 * 
 * This program is free software: you can redistribute it and/or modify
@@ -16,23 +16,10 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Rainier.NativeOmukadeConnector
+namespace Omukade.Cheyenne.CustomMessages
 {
-    internal class ConfigurationSettings
+    public class GetRankData
     {
-        public string OmukadeEndpoint = "ws://cheyenne-beta.omukade.net:10850";
-        public bool ForceFriendsToBeOnline = false;
-        public bool EnableAllCosmetics = false;
-        public bool ForceAllLegalityChecksToSucceed = false;
-        public bool DumpManifestFileUrl = false;
-        public bool AskServerForImplementedCards = false;
-        public bool ShowManagerLoadingStatus = false;
-        public bool EnableVerboseClientLogging = false;
-        public bool PrivatizeMatchOperationResult = false;
-        public bool GetRankData = false;
     }
 }

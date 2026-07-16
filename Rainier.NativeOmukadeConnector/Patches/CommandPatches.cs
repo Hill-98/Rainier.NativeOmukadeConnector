@@ -25,6 +25,7 @@ using Rainier.NativeOmukadeConnector.Messages;
 namespace Rainier.NativeOmukadeConnector.Patches
 {
     [HarmonyPatch(typeof(Command<GetOnlineFriends>))]
+    [HarmonyPatch(typeof(Command<GetRankData>))]
     [HarmonyPatch(typeof(Command<SupplementalDataMessageV2>))]
     internal static class CommandPatches
     {
@@ -33,7 +34,7 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPrefix]
         static void ForceJsonForOmukadePayloads(ref ICodec serializer, object body)
         {
-            if(body is SupplementalDataMessageV2 || body is GetOnlineFriends || body is GetImplementedExpandedCardsV1)
+            if(body is SupplementalDataMessageV2 || body is GetOnlineFriends || body is GetRankData || body is GetImplementedExpandedCardsV1)
             {
                 Plugin.SharedLogger.LogDebug($"Forcing {body.GetType().Name} to be processed as JSON");
                 serializer = WswCommon.JsonCodec;

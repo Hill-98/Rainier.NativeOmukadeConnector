@@ -17,15 +17,17 @@
 **************************************************************************/
 
 // #define DEBUG_LOG_RX_MESSAGES
-using HarmonyLib;
-using Omukade.Cheyenne.CustomMessages;
 using ClientNetworking;
+using ClientNetworking.Models.Friend;
 using ClientNetworking.Util;
+using HarmonyLib;
+using Newtonsoft.Json;
+using Omukade.Cheyenne.CustomMessages;
 using Rainier.NativeOmukadeConnector.Messages;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
-using ClientNetworking.Models.Friend;
 
 namespace Rainier.NativeOmukadeConnector.Patches
 {
@@ -58,15 +60,19 @@ namespace Rainier.NativeOmukadeConnector.Patches
     [HarmonyPatch(typeof(Client))]
     internal static class ClientPatches
     {
-        internal static event Action<OnlineFriendsResponse>? ReceivedOnlineFriendsResponse;
-        internal static MethodInfo forwardMessageForOFR = typeof(Client)
-            .GetMethod("ForwardMessage", BindingFlags.Instance | BindingFlags.NonPublic)
-            .MakeGenericMethod(typeof(OnlineFriendsResponse));
-
         internal static event Action<ImplementedExpandedCardsV1>? ReceivedImplementedExpandedCardsV1;
+        internal static event Action<OnlineFriendsResponse>? ReceivedOnlineFriendsResponse;
+        internal static event Action<RankDataResponse>? ReceivedRankExpResponse;
+
         internal static MethodInfo forwardMessageForExpandedCardsV1 = typeof(Client)
             .GetMethod("ForwardMessage", BindingFlags.Instance | BindingFlags.NonPublic)
             .MakeGenericMethod(typeof(ImplementedExpandedCardsV1));
+        internal static MethodInfo forwardMessageForOFR = typeof(Client)
+            .GetMethod("ForwardMessage", BindingFlags.Instance | BindingFlags.NonPublic)
+            .MakeGenericMethod(typeof(OnlineFriendsResponse));
+        internal static MethodInfo forwardMessageForRER = typeof(Client)
+            .GetMethod("ForwardMessage", BindingFlags.Instance | BindingFlags.NonPublic)
+            .MakeGenericMethod(typeof(RankDataResponse));
 
         internal static HashSet<string>? ImplementedExpandedCardsFromServer = null;
         internal static string? ImplementedExpandedCardsFromServerChecksum = null;
@@ -75,12 +81,28 @@ namespace Rainier.NativeOmukadeConnector.Patches
         [HarmonyPatch("CreateMessageHandlerMapping")]
         static void AddHanderForResponses(Client __instance, Dictionary<string, Action<string, ReusableBuffer>> __result)
         {
-            //Plugin.SharedLogger.LogInfo($"Adding OFR frame to list of message handlers...");
+            __result.Add(nameof(ImplementedExpandedCardsV1), (contentType, buffer) =>
+            {
+                try
+                {
+                    forwardMessageForExpandedCardsV1.Invoke(__instance, [ contentType, buffer, new MessageHandler<ImplementedExpandedCardsV1>((c, e) =>
+                    {
+                        ImplementedExpandedCardsFromServer = [.. e.ImplementedCardNames];
+                        ImplementedExpandedCardsFromServerChecksum = e.Checksum;
+                        ReceivedImplementedExpandedCardsV1?.Invoke(e);
+                    }), false ]);
+                }
+                catch (Exception e)
+                {
+                    BetterExceptionLogger.LogException(e);
+                    throw;
+                }
+            });
             __result.Add(nameof(OnlineFriendsResponse), (contentType, buffer) =>
             {
                 try
                 {
-                    forwardMessageForOFR.Invoke(__instance, new object[] { contentType, buffer, new MessageHandler<OnlineFriendsResponse>((c, e) => ReceivedOnlineFriendsResponse?.Invoke(e)) });
+                    forwardMessageForOFR.Invoke(__instance, [contentType, buffer, new MessageHandler<OnlineFriendsResponse>((c, e) => ReceivedOnlineFriendsResponse?.Invoke(e)), false]);
                 }
                 catch(Exception e)
                 {
@@ -88,17 +110,12 @@ namespace Rainier.NativeOmukadeConnector.Patches
                     throw;
                 }
             });
-
-            __result.Add(nameof(ImplementedExpandedCardsV1), (contentType, buffer) =>
+            __result.Add(nameof(RankDataResponse), (contentType, buffer) =>
             {
+                Console.WriteLine("contentType: " + contentType);
                 try
                 {
-                    forwardMessageForExpandedCardsV1.Invoke(__instance, new object[] { contentType, buffer, new MessageHandler<ImplementedExpandedCardsV1>((c, e) =>
-                    {
-                        ImplementedExpandedCardsFromServer = new HashSet<string>(e.ImplementedCardNames);
-                        ImplementedExpandedCardsFromServerChecksum = e.Checksum;
-                        ReceivedImplementedExpandedCardsV1?.Invoke(e);
-                    }) });
+                    forwardMessageForRER.Invoke(__instance, [contentType, buffer, new MessageHandler<RankDataResponse>((c, e) => ReceivedRankExpResponse?.Invoke(e)), false]);
                 }
                 catch (Exception e)
                 {
